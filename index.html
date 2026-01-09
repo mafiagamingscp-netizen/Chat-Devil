@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تسجيل</title>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const firebaseConfig = {
+ databaseURL:"https://hacker-4bd68-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const storage = getStorage(app);
+
+window.register = async () => {
+ const name = username.value.trim();
+ const age = ageInput.value;
+ const img = photo.files[0];
+
+ if(!name || !age || !img) return alert("كمل البيانات");
+
+ const userRef = ref(db,"users/"+name);
+ if((await get(userRef)).exists())
+   return alert("الاسم مستخدم ❌");
+
+ const imgRef = sRef(storage,"profiles/"+name);
+ await uploadBytes(imgRef,img);
+ const url = await getDownloadURL(imgRef);
+
+ await set(userRef,{
+   age,
+   photo:url,
+   online:true,
+   lastSeen:Date.now()
+ });
+
+ await set(ref(db,"groups/devil/members/"+name),true);
+
+ localStorage.setItem("user",name);
+ location.href="index1.html";
+};
+</script>
+</head>
+
+<body>
+<h2>تسجيل</h2>
+<input id="username" placeholder="الاسم"><br>
+<input id="ageInput" type="number" placeholder="السن"><br>
+<input id="photo" type="file"><br>
+<button onclick="register()">دخول</button>
+</body>
+</html>
