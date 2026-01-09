@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Devil Group</title>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const firebaseConfig = {
+ databaseURL:"https://hacker-4bd68-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const storage = getStorage(app);
+
+let myName = localStorage.getItem("user");
+if(!myName) location.href="register.html";
+
+const userRef = ref(db,"users/"+myName);
+update(userRef,{online:true});
+onDisconnect(userRef).update({online:false,lastSeen:Date.now()});
+
+window.send = () => {
+ if(!msg.value.trim()) return;
+ push(ref(db,"groups/devil/messages"),{
+   u:myName,
+   t:msg.value,
+   time:Date.now()
+ });
+ msg.value="";
+};
+
+imgInput.onchange = async e=>{
+ const f=e.target.files[0];
+ const r=sRef(storage,"group/"+Date.now());
+ await uploadBytes(r,f);
+ const url=await getDownloadURL(r);
+ push(ref(db,"groups/devil/messages"),{
+   u:myName,
+   img:url,
+   time:Date.now()
+ });
+};
+
+onValue(ref(db,"groups/devil/messages"), snap=>{
+ chat.innerHTML="";
+ snap.forEach(c=>{
+  const d=c.val();
+  chat.innerHTML+=`
+  <div onclick="openPrivate('${d.u}')">
+    <b>${d.u}</b><br>
+    ${d.t||""}
+    ${d.img?`<img src="${d.img}" width="150">`:""}
+  </div><hr>`;
+ });
+});
+</script>
+</head>
+
+<body>
+<h2 onclick="location.href='members.html'">Devil Group 👥</h2>
+
+<div id="chat"></div>
+
+<input id="msg" placeholder="رسالة">
+<input type="file" id="imgInput">
+<button onclick="send()">إرسال</button>
+
+<script>
+function openPrivate(u){
+ if(u===localStorage.getItem("user"))return;
+ location.href="private.html?u="+u;
+}
+</script>
+</body>
+</html>
