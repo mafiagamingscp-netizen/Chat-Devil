@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>الأعضاء</title>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const app = initializeApp({databaseURL:"https://hacker-4bd68-default-rtdb.firebaseio.com"});
+const db = getDatabase(app);
+
+onValue(ref(db,"groups/devil/members"), snap=>{
+ list.innerHTML="";
+ snap.forEach(m=>{
+  onValue(ref(db,"users/"+m.key),u=>{
+   const d=u.val();
+   list.innerHTML+=`
+   <div onclick="openPrivate('${m.key}')">
+    <img src="${d.photo}" width="40">
+    ${m.key} ${d.online?"🟢":"⚫"}
+   </div>`;
+  });
+ });
+});
+</script>
+</head>
+
+<body>
+<h2>أعضاء الجروب</h2>
+<div id="list"></div>
+
+<script>
+function openPrivate(u){
+ location.href="private.html?u="+u;
+}
+</script>
+</body>
+</html>
